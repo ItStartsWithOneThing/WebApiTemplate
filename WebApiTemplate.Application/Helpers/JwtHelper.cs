@@ -3,13 +3,14 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using WebApiTemplate.Application.Constants;
 using WebApiTemplate.Application.Models;
 
 namespace WebApiTemplate.Application.Helpers;
 
 internal static class JwtHelper
 {
-    internal static string IssueRefreshToken(int size = 32)
+    internal static string IssueRefreshToken(int size = AuthConstants.Default_Crypto_Key_Size)
     {
         var randomBytes = new byte[size];
 

@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Options;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using WebApiTemplate.Application.Constants;
 using WebApiTemplate.Application.Helpers;
 using WebApiTemplate.Application.Iterfaces;
 using WebApiTemplate.Application.Models;
@@ -10,7 +11,7 @@ using WebApiTemplate.Domain.Data.TableModels;
 
 namespace WebApiTemplate.Application.Services;
 
-internal class AuthService : IAuthService
+public class AuthService : IAuthService
 {
     private readonly ILogger<AuthService> _logger;
     private readonly AuthOptions _authOptions;
@@ -29,12 +30,40 @@ internal class AuthService : IAuthService
         _accountRepository = accountRepository;
     }
 
+    public async Task RegisterUser(SignUpInfo signUpInfo)
+    {
+        var account = await GetAccount(signUpInfo.Username);
+        if (account != null)
+        {
+            _logger.LogTrace("Account with username: '{username}' already exist", signUpInfo.Username);
+            throw new UnauthorizedAccessException();
+        }
+
+        var encryptionLevelId = 2;
+        var passwordSalt = AuthHelper.CreateSalt(AuthConstants.Default_Crypto_Key_Size);
+        var passwordHash = AuthHelper.CreatePasswordHash(signUpInfo.Password, passwordSalt, encryptionLevelId)!;
+
+        var newAccount = new Account()
+        {
+            Username = signUpInfo.Username,
+            PasswordEncrypted = passwordHash,
+            EncryptionLevelId = encryptionLevelId,
+            PasswordSalt = passwordSalt,
+            EmailAddress = signUpInfo.EmailAddress,
+            PhoneNumber = signUpInfo.PhoneNumber,
+            FirstName = signUpInfo.FirstName,
+            LastName = signUpInfo.LastName
+        };
+
+        await _accountRepository.Add(newAccount);
+    }
+
     public async Task<JwtSecurityToken> Login(string username, string password)
     {
         var account = await GetAccount(username);
         if (account == null)
         {
-            _logger.LogTrace("Account with login: '{username}' not found", username);
+            _logger.LogTrace("Account with username: '{username}' not found", username);
             throw new UnauthorizedAccessException();
         }
 
@@ -59,7 +88,7 @@ internal class AuthService : IAuthService
         var account = await GetAccount(username);
         if (account == null)
         {
-            _logger.LogTrace("Account with login: '{username}' not found", username);
+            _logger.LogTrace("Account with username: '{username}' not found", username);
             throw new UnauthorizedAccessException();
         }
 
@@ -73,7 +102,7 @@ internal class AuthService : IAuthService
 
         await _refreshTokenRepository.Add(newRefreshToken);
 
-        _logger.LogTrace("Refresh token was added to user: '{login}'", account.Username);
+        _logger.LogTrace("Refresh token was added to user: '{username}'", account.Username);
 
         return newRefreshToken;
     }

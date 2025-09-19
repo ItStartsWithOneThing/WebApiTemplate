@@ -1,8 +1,9 @@
 ﻿using WebApiTemplate.Domain.Data.Interfaces.Base;
+using WebApiTemplate.Domain.Data.TableModels.Base;
 
 namespace WebApiTemplate.Infrastructure.Repositories.Base;
 
-public class BaseRepository<T> : IBaseRepository<T> where T : class
+public class BaseRepository<T> : IBaseRepository<T> where T : BaseEntity
 {
     private readonly MockDatabase database = MockDatabase.Instance;
 

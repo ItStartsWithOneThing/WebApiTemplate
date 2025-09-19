@@ -6,6 +6,17 @@ namespace WebApiTemplate.Application.Helpers;
 
 internal static class AuthHelper
 {
+    public static string CreateSalt(int size)
+    {
+        var randomNumber = new byte[size];
+        using (var rng = RandomNumberGenerator.Create())
+        {
+            rng.GetBytes(randomNumber);
+        }
+
+        return Convert.ToBase64String(randomNumber);
+    }
+
     internal static bool IsPasswordValid(
         string passwordEncrypted,
         string passwordSalt,
@@ -15,7 +26,7 @@ internal static class AuthHelper
         return passwordEncrypted == CreatePasswordHash(password, passwordSalt, encryptionLevelId);
     }
 
-    private static string? CreatePasswordHash(
+    public static string? CreatePasswordHash(
         string? password,
         string? salt,
         int? encryptionLevelId)

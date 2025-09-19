@@ -15,18 +15,17 @@ Using minimal APIs.
 Data access layer:
 Mock database based on Singleton pattern. All apis for it are with lock (threadsafe).
 *TODO: Consider to change it on some thread-safe collection like ConcurrentDictionary.
-*TODO: Consider to add json file to work with for retaining users info (instead of db).
+*TODO: Consider to add json file to work with for retaining users info (instead of db) - caching.
 
 Repository methods are using delegates/expressions as a parameters.
 *TODO: Consider to partially change it with regular parameters in order to have more incapsulation.
 
 Technologies used:
-Standart JWT auth. 
+Standart JWT auth.
 
 
 Next steps:
-Put the registration of services in order.
-Add auth registration.
-Add Swagger.
-Test it all.
 Add OAuth 2 for Google.
+Подключить OData и проверить, работает ли она со Swagger.
+Add logout.
+Add json file to work with for retaining users for working with file practice.

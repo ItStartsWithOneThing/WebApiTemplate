@@ -1,8 +1,9 @@
-﻿namespace WebApiTemplate.Domain.Data.TableModels;
+﻿using WebApiTemplate.Domain.Data.TableModels.Base;
 
-public class RefreshToken
+namespace WebApiTemplate.Domain.Data.TableModels;
+
+public class RefreshToken : BaseEntity
 {
-    public int Id { get; set; }
     public int AccountId { get; set; }
     public string? Token { get; set; }
     public DateTime ExpiresAt { get; set; }

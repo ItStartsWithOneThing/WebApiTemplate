@@ -1,9 +1,13 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using System.Text;
 using WebApiTemplate.API.APIs;
+using WebApiTemplate.API.Mappers;
+using WebApiTemplate.Application.Iterfaces;
 using WebApiTemplate.Application.Models;
+using WebApiTemplate.Application.Services;
 using WebApiTemplate.Domain.Data.Interfaces;
 using WebApiTemplate.Infrastructure.Repositories;
 using WebApiTemplate.Infrastructure.Repositories.Base;
@@ -14,7 +18,12 @@ public static class StartupExtensions
 {
     public static WebApplicationBuilder ConfigureAppServices(this WebApplicationBuilder builder)
     {
+        builder.Services.Configure<AuthOptions>(builder.Configuration.GetSection(nameof(AuthOptions)));
         builder.AddAuthentication();
+        builder.Services.AddSwagger();
+        builder.Services.AddOpenApi();
+        builder.Services.AddAutoMapperConfig();
+        builder.Services.AddServices();
         builder.Services.AddInfrastructureServices();
 
         return builder;
@@ -22,7 +31,21 @@ public static class StartupExtensions
 
     public static async Task ConfigureAppPipelineAsync(this WebApplication app)
     {
-        app.MapAuthAPI();
+        app
+            .MapAuthAPI()
+            .MapAdminAPI();
+
+        app.UseHttpsRedirection();
+
+        app.UseRouting();
+
+        app.UseAuthentication();
+        app.UseAuthorization();
+
+        app.MapOpenApi();
+
+        app.UseSwagger();
+        app.UseSwaggerUI();
     }
 
     public static WebApplicationBuilder AddAuthentication(this WebApplicationBuilder builder)
@@ -75,6 +98,8 @@ public static class StartupExtensions
                 };
             });
 
+        builder.Services.AddAuthorization();
+
         return builder;
     }
 
@@ -85,6 +110,66 @@ public static class StartupExtensions
 
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
         services.AddScoped<IAccountRepository, AccountRepository>();
+
+        return services;
+    }
+
+    public static IServiceCollection AddSwagger(this IServiceCollection services)
+    {
+        services.AddSwaggerGen(opt =>
+        {
+            opt.DescribeAllParametersInCamelCase();
+
+            opt.SwaggerDoc("v1", new OpenApiInfo
+            {
+                Title = "API V1",
+                Version = "v1"
+            });
+
+            opt.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+            {
+                In = ParameterLocation.Header,
+                Description = "Enter token",
+                Name = "Authorization",
+                Type = SecuritySchemeType.Http,
+                BearerFormat = "JWT",
+                Scheme = "bearer"
+            });
+
+            opt.AddSecurityRequirement(new OpenApiSecurityRequirement
+                {
+                    {
+                        new OpenApiSecurityScheme
+                        {
+                            Reference = new OpenApiReference
+                            {
+                                Type = ReferenceType.SecurityScheme,
+                                Id = "Bearer"
+                            }
+                        },
+                        Array.Empty<string>()
+                    }
+                });
+        });
+
+        return services;
+    }
+
+    public static IServiceCollection AddAutoMapperConfig(this IServiceCollection services)
+    {
+        var profiles = new Type[]
+        {
+            typeof(MappingProfile)
+        };
+
+        services.AddAutoMapper(cfg => { }, profiles);
+        return services;
+    }
+
+    public static IServiceCollection AddServices(this IServiceCollection services)
+    {
+        services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<IAccountService, AccountService>();
 
         return services;
     }
