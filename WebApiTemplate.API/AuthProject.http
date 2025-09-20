@@ -1,6 +1,0 @@
-@AuthProject_HostAddress = http://localhost:5152
-
-GET {{AuthProject_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###
